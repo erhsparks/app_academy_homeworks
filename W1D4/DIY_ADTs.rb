@@ -34,7 +34,6 @@ class Queue
   end
 end
 
-
 class Map
   def initialize
     @map = []
