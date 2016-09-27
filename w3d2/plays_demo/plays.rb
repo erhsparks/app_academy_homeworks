@@ -19,6 +19,10 @@ class Play
     data.map { |datum| Play.new(datum) }
   end
 
+## TO WRITE
+# Play::find_by_title(title)
+# Play::find_by_playwright(name) (returns all plays written by playwright)
+
   def initialize(options)
     @id = options['id']
     @title = options['title']
@@ -94,9 +98,7 @@ class Playwright
   end
 
 
-end
-
 ## TO WRITE:
 # Playwright#get_plays (returns all plays written by playwright)
-# Play::find_by_title(title)
-# Play::find_by_playwright(name) (returns all plays written by playwright)
+
+end
