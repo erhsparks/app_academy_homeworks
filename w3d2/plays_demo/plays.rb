@@ -16,12 +16,9 @@ class Play
 
   def self.all
     data = PlayDBConnection.instance.execute("SELECT * FROM plays")
+
     data.map { |datum| Play.new(datum) }
   end
-
-## TO WRITE
-# Play::find_by_title(title)
-# Play::find_by_playwright(name) (returns all plays written by playwright)
 
   def initialize(options)
     @id = options['id']
@@ -38,6 +35,7 @@ class Play
       VALUES
         (?, ?, ?)
     SQL
+
     @id = PlayDBConnection.instance.last_insert_row_id
   end
 
@@ -52,20 +50,62 @@ class Play
         id = ?
     SQL
   end
+
+
+  def find_by_title(title)
+    plays = PlayDBConnection.instance.execute(<<-SQL, title)
+      SELECT
+        *
+      FROM
+        plays
+      WHERE
+        title = ?
+    SQL
+    return nil if plays.empty?
+
+    plays.first
+  end
+
+  def find_by_playwright(name)
+    pw = Playwright.find_by_name(name)
+    raise "Playwright #{name} not found!" unless pw
+
+    plays = PlayDBConnection.instance.execute(<<-SQL, pw.id)
+      SELECT
+        *
+      FROM
+        plays
+      WHERE
+        playwright_id = ?
+      SQL
+    return nil if plays.empty?
+
+    plays.map { |play| Play.new(play) }
+  end
 end
+
 
 class Playwright
   attr_accessor :name, :birth_year
 
   def self.all
     data = PlayDBConnection.instance.execute("SELECT * FROM playwrights")
+
     data.map { |datum| Playwright.new(datum) }
   end
 
   def self.find_by_name(name)
-    pws = Playwright.all
+    person = PlayDBConnection.instance.execute(<<-SQL, name)
+      SELECT
+        *
+      FROM
+        playwrights
+      WHERE
+        name = ?
+    SQL
+    return nil if person.empty?
 
-    pws.select { |pw| pw.name == name }
+    Playwright.new(person.first)
   end
 
   def initialize(options)
@@ -97,8 +137,17 @@ class Playwright
     SQL
   end
 
+  def get_plays
+    raise "#{self} not in database" unless @id
+    plays = PlayDBConnection.instance.execute(<<-SQL, @id)
+      SELECT
+        *
+      FROM
+        plays
+      WHERE
+        playwright_id = ?
+    SQL
 
-## TO WRITE:
-# Playwright#get_plays (returns all plays written by playwright)
-
+    plays.map { |play| Play.new(play) }
+  end
 end
